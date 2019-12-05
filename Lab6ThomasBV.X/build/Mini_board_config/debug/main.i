@@ -4959,6 +4959,7 @@ bool demine(char x, char y);
 void enleveTuilesAutour(char x, char y);
 bool gagne(int* pMines);
 void afficheTabVue(void);
+void afficheTabMines(void);
 
 
 
@@ -4976,6 +4977,7 @@ void main(void)
 {
 char posY=1;
 char posX=1;
+bool lose=1;
 
 initialisation();
 lcd_init();
@@ -4984,21 +4986,30 @@ afficheTabVue();
 rempliMines(5);
 metToucheCombien();
 
-# 84
+# 86
 while(1)
 {
 deplace(&posX,&posY);
 if(PORTBbits.RB1==0)
 {
 while(PORTBbits.RB1==0);
-demine(posX-1,posY-1);
+lose = demine(posX-1,posY-1);
+if(lose == 0)
+{
+afficheTabMines();
+while(PORTBbits.RB1==1);
+initTabVue();
+afficheTabVue();
+rempliMines(5);
+metToucheCombien();
+}
 afficheTabVue();
 }
 _delay((unsigned long)((100)*(1000000/4000.0)));
 }
 }
 
-# 103
+# 114
 void initTabVue(void)
 {
 for(int i=0;i<4;i++)
@@ -5011,7 +5022,7 @@ m_tabVue[i][20]=0;
 }
 }
 
-# 120
+# 131
 void afficheTabVue(void)
 {
 for(int i=0;i<4;i++)
@@ -5021,11 +5032,26 @@ lcd_putMessage(m_tabVue[i]);
 }
 }
 
-# 136
+# 145
+void afficheTabMines(void)
+{
+for(int i=0;i<4;i++)
+{
+lcd_gotoXY(1,i+1);
+lcd_putMessage(m_tabMines[i]);
+}
+}
+
+# 160
 void rempliMines(int nb)
 {
 char x;
 char y;
+
+for(int i=0;i<4;i++)
+{
+strcpy(m_tabMines[i],"                    ");
+}
 for(char i=0;i<nb;i++)
 {
 do
@@ -5039,7 +5065,7 @@ m_tabMines[y][x]=2;
 
 }
 
-# 162
+# 191
 void metToucheCombien(void)
 {
 for(char i=0;i<4;i++)
@@ -5058,7 +5084,7 @@ m_tabMines[i][j]=' ';
 }
 }
 
-# 185
+# 214
 char calculToucheCombien(int ligne, int colonne)
 {
 char countMine=0;
@@ -5097,7 +5123,7 @@ countMine++;
 return countMine;
 }
 
-# 229
+# 258
 void deplace(char* x, char* y)
 {
 if(getAnalog(7)>150)
@@ -5135,25 +5161,62 @@ if(*y>4)
 lcd_gotoXY(*x,*y);
 }
 
-# 274
+# 303
 bool demine(char x, char y)
 {
 m_tabVue[y][x] = m_tabMines[y][x];
+if(m_tabVue[y][x]== 2)
+{
+return 0;
+}
+enleveTuilesAutour(x,y);
+return 1;
 }
 
-# 285
+# 320
 void enleveTuilesAutour(char x, char y)
 {
-
+if((m_tabMines[x-1][y-1]!=2)&&(x>=0)&&(y>=0))
+{
+m_tabVue[y-1][x-1] = m_tabMines[y-1][x-1];
+}
+if((m_tabMines[x][y-1]!=2)&&(y>=0))
+{
+m_tabVue[y-1][x] = m_tabMines[y-1][x];
+}
+if((m_tabMines[x+1][y-1]!=2)&&(y>=0)&&(x<20))
+{
+m_tabVue[y-1][x+1] = m_tabMines[y-1][x+1];
+}
+if((m_tabMines[x-1][y+1]!=2)&&(x>=0)&&(y<4))
+{
+m_tabVue[y+1][x-1] = m_tabMines[y+1][x-1];
+}
+if((m_tabMines[x-1][y]!=2)&&(x>=0))
+{
+m_tabVue[y][x-1] = m_tabMines[y][x-1];
+}
+if((m_tabMines[x][y+1]!=2)&&(y<4))
+{
+m_tabVue[y+1][x] = m_tabMines[y+1][x];
+}
+if((m_tabMines[x+1][y+1]!=2)&&(y<20)&&(x<4))
+{
+m_tabVue[y+1][x+1] = m_tabMines[y+1][x+1];
+}
+if((m_tabMines[x+1][y]!=2)&&(x<20))
+{
+m_tabVue[y][x+1] = m_tabMines[y][x+1];
+}
 }
 
-# 297
+# 363
 bool gagne(int* pMines)
 {
 
 }
 
-# 307
+# 373
 char getAnalog(char canal)
 {
 ADCON0bits.CHS = canal;
@@ -5164,7 +5227,7 @@ while (ADCON0bits.GO_DONE == 1)
 return ADRESH;
 }
 
-# 322
+# 388
 void initialisation(void)
 {
 TRISD = 0;

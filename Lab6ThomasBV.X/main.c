@@ -1,14 +1,14 @@
  /**
  * @file main.c  
  * @author Thomas Bureau-Viens
- * @date   06-10-2019
+ * @date   04-12-2019
  * @brief  
  *
  * @version 1.0
  * Environnement:
- *     Développement: MPLAB X IDE (version 5.05)
- *     Compilateur: XC8 (version 2.00)
- *     Matériel: Carte démo du Pickit3. PIC 18F45K20
+ *     Développement: MPLAB X IDE (version 5.25)
+ *     Compilateur: XC8 (version 2.10)
+ *     Matériel: Carte démo du Pickit4. PIC 18F45K20
   */
 
 /****************** Liste des INCLUDES ****************************************/
@@ -48,6 +48,7 @@ bool demine(char x, char y);
 void enleveTuilesAutour(char x, char y);
 bool gagne(int* pMines);
 void afficheTabVue(void);
+void afficheTabMines(void);
 
 /****************** VARIABLES GLOBALES ****************************************/
 
@@ -65,6 +66,7 @@ void main(void)
 {
     char posY=1;
     char posX=1;
+    bool lose=1;
     
     initialisation();  
     lcd_init();
@@ -87,7 +89,16 @@ void main(void)
         if(PORT_SW==0)
         {
             while(PORT_SW==0);
-            demine(posX-1,posY-1);
+            lose = demine(posX-1,posY-1);
+            if(lose == 0)
+            {
+                afficheTabMines();
+                while(PORT_SW==1);
+                initTabVue();
+                afficheTabVue();
+                rempliMines(NB_MINE);
+                metToucheCombien();
+            }
             afficheTabVue();
         }
         __delay_ms(100);
@@ -125,7 +136,20 @@ void afficheTabVue(void)
         lcd_putMessage(m_tabVue[i]);  
     }
 }
- 
+
+/*
+ * @brief Affiche m_tabMines sur le lcd
+ * @param rien
+ * @return rien
+ */
+void afficheTabMines(void)
+{
+    for(int i=0;i<NB_LIGNE;i++)
+    {
+        lcd_gotoXY(1,i+1);
+        lcd_putMessage(m_tabMines[i]);  
+    }
+}
 /*
  * @brief Rempli le tableau m_tabMines d'un nombre (nb) de mines au hasard.
  *  Les cases vides contiendront le code ascii d'un espace et les cases avec
@@ -137,6 +161,11 @@ void rempliMines(int nb)
 {
     char x;
     char y;
+    
+    for(int i=0;i<NB_LIGNE;i++)
+    {
+        strcpy(m_tabMines[i],"                    ");  
+    }
     for(char i=0;i<nb;i++)
     {
         do
@@ -278,8 +307,8 @@ bool demine(char x, char y)
     {
         return false;
     }
-    
     enleveTuilesAutour(x,y);
+    return true;
 }
 
 /*
@@ -290,37 +319,37 @@ bool demine(char x, char y)
  */
 void enleveTuilesAutour(char x, char y)
 {
-    if((m_tabMines[x-1][y-1]!=2)&&(x-1>=0)&&(y-1>=0))
+    if((m_tabMines[x-1][y-1]!=2)&&(x>=0)&&(y>=0))
     {
         m_tabVue[y-1][x-1] = m_tabMines[y-1][x-1];
     }
-    if((m_tabMines[x][y-1]!=2)&&(y-1>=0))
+    if((m_tabMines[x][y-1]!=2)&&(y>=0))
     {
         m_tabVue[y-1][x] = m_tabMines[y-1][x];  
     }
-    if((m_tabMines[x+1][y-1]!=2)&&(y-1>=0)&&(x+1<NB_COL))
+    if((m_tabMines[x+1][y-1]!=2)&&(y>=0)&&(x<NB_COL))
     {
-        m_tabVue[y-1][x+1] = m_tabMines[y-1][x-1];
+        m_tabVue[y-1][x+1] = m_tabMines[y-1][x+1];
     }
-    if((m_tabMines[x-1][y]!=2)&&(x-1>=0))
+    if((m_tabMines[x-1][y+1]!=2)&&(x>=0)&&(y<NB_LIGNE))
     {
-        m_tabVue[y-1][x-1] = m_tabMines[y-1][x-1];
+        m_tabVue[y+1][x-1] = m_tabMines[y+1][x-1];
     }
-    if((m_tabMines[x-1][y+1]!=2)&&(x-1>=0)&&(y+1<20))
+    if((m_tabMines[x-1][y]!=2)&&(x>=0))
     {
-        m_tabVue[y-1][x-1] = m_tabMines[y-1][x-1];
+        m_tabVue[y][x-1] = m_tabMines[y][x-1];
     }
-    if((m_tabMines[x][y+1]!=2)&&(y+1<20))
+    if((m_tabMines[x][y+1]!=2)&&(y<NB_LIGNE))
     {
-        m_tabVue[y-1][x-1] = m_tabMines[y-1][x-1];
+        m_tabVue[y+1][x] = m_tabMines[y+1][x];
     }
-    if((m_tabMines[x+1][y+1]!=2)&&(y+1<20)&&(x+1<20))
+    if((m_tabMines[x+1][y+1]!=2)&&(y<NB_COL)&&(x<NB_LIGNE))
     {
-        m_tabVue[y-1][x-1] = m_tabMines[y-1][x-1];
+        m_tabVue[y+1][x+1] = m_tabMines[y+1][x+1];
     }
-    if((m_tabMines[x+1][y]!=2)&&(x+1<20))
+    if((m_tabMines[x+1][y]!=2)&&(x<NB_COL))
     {
-        m_tabVue[y-1][x-1] = m_tabMines[y-1][x-1];
+        m_tabVue[y][x+1] = m_tabMines[y][x+1];
     }
 }
 
