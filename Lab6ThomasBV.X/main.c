@@ -67,12 +67,14 @@ void main(void)
     char posY=1;
     char posX=1;
     bool lose=1;
+    bool win=0;
+    int nbMines=5;
     
     initialisation();  
     lcd_init();
     initTabVue();
     afficheTabVue();
-    rempliMines(NB_MINE);
+    rempliMines(nbMines);
     metToucheCombien();
     
     /*lcd_gotoXY(1,1);
@@ -90,13 +92,14 @@ void main(void)
         {
             while(PORT_SW==0);
             lose = demine(posX-1,posY-1);
-            if(lose == 0)
+            win = gagne(&nbMines);
+            if((lose==0)||(win==1))
             {
                 afficheTabMines();
                 while(PORT_SW==1);
                 initTabVue();
                 afficheTabVue();
-                rempliMines(NB_MINE);
+                rempliMines(nbMines);
                 metToucheCombien();
             }
             afficheTabVue();
@@ -214,6 +217,17 @@ void metToucheCombien(void)
 char calculToucheCombien(int ligne, int colonne)
 {
     char countMine=0;
+    /*for(char i=ligne-1;i<=ligne+1;i++)
+    {
+        if(i<0)
+        {
+            i++;
+        }
+        for(char j=colonne-1;i<=colonne;j++)
+        {
+            if((m_tabMines[i][colonne-1]==2)&&(ligne-1>=0)&&(colonne-1>=0))
+        }
+    }*/
     if((m_tabMines[ligne-1][colonne-1]==2)&&(ligne-1>=0)&&(colonne-1>=0))
     {
         countMine++;
@@ -302,12 +316,15 @@ void deplace(char* x, char* y)
  */
 bool demine(char x, char y)
 {
-    m_tabVue[y][x] = m_tabMines[y][x];
-    if(m_tabVue[y][x]== MINE)
+    if(m_tabMines[y][x]== MINE)
     {
         return false;
     }
-    enleveTuilesAutour(x,y);
+    if(m_tabVue[y][x]==TUILE)
+    {
+        enleveTuilesAutour(x,y);
+    }
+    m_tabVue[y][x] = m_tabMines[y][x];
     return true;
 }
 
@@ -319,35 +336,35 @@ bool demine(char x, char y)
  */
 void enleveTuilesAutour(char x, char y)
 {
-    if((m_tabMines[x-1][y-1]!=2)&&(x>=0)&&(y>=0))
+    if((m_tabMines[y-1][x-1]!=MINE)&&(x>=0)&&(y>=0))
     {
         m_tabVue[y-1][x-1] = m_tabMines[y-1][x-1];
     }
-    if((m_tabMines[x][y-1]!=2)&&(y>=0))
+    if((m_tabMines[y-1][x]!=MINE)&&(y>=0))
     {
         m_tabVue[y-1][x] = m_tabMines[y-1][x];  
     }
-    if((m_tabMines[x+1][y-1]!=2)&&(y>=0)&&(x<NB_COL))
+    if((m_tabMines[y-1][x+1]!=MINE)&&(y>=0)&&(x<NB_COL))
     {
         m_tabVue[y-1][x+1] = m_tabMines[y-1][x+1];
     }
-    if((m_tabMines[x-1][y+1]!=2)&&(x>=0)&&(y<NB_LIGNE))
+    if((m_tabMines[y+1][x-1]!=MINE)&&(x>=0)&&(y<NB_LIGNE))
     {
         m_tabVue[y+1][x-1] = m_tabMines[y+1][x-1];
     }
-    if((m_tabMines[x-1][y]!=2)&&(x>=0))
+    if((m_tabMines[y][x-1]!=MINE)&&(x>=0))
     {
         m_tabVue[y][x-1] = m_tabMines[y][x-1];
     }
-    if((m_tabMines[x][y+1]!=2)&&(y<NB_LIGNE))
+    if((m_tabMines[y+1][x]!=MINE)&&(y<NB_LIGNE))
     {
         m_tabVue[y+1][x] = m_tabMines[y+1][x];
     }
-    if((m_tabMines[x+1][y+1]!=2)&&(y<NB_COL)&&(x<NB_LIGNE))
+    if((m_tabMines[y+1][x+1]!=MINE)&&(y<NB_LIGNE)&&(x<NB_COL))
     {
         m_tabVue[y+1][x+1] = m_tabMines[y+1][x+1];
     }
-    if((m_tabMines[x+1][y]!=2)&&(x<NB_COL))
+    if((m_tabMines[y][x+1]!=MINE)&&(x<NB_COL))
     {
         m_tabVue[y][x+1] = m_tabMines[y][x+1];
     }
@@ -362,7 +379,26 @@ void enleveTuilesAutour(char x, char y)
  */
 bool gagne(int* pMines)
 {
-
+    char count=0; 
+    for(char i=0;i<NB_LIGNE;i++)
+    {
+        for(char j=0;j<NB_COL;j++)
+        {
+            if(m_tabVue[i][j]==TUILE)
+            {
+                count++;
+            }
+        }
+    }
+    if(count == *pMines)
+    {
+        (*pMines)++;
+        return true;  
+    }
+    else
+    {    
+        return false;
+    }
 }
 
 /*
