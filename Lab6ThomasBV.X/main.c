@@ -1,8 +1,16 @@
  /**
  * @file main.c  
  * @author Thomas Bureau-Viens
- * @date   04-12-2019
- * @brief  
+ * @date   16-12-2019
+ * @brief  Ce programme est une recréation du jeu démineur sur un écran LCD.
+ * Le programme démarre en affichant un écran complet de tuiles. Le curseur du 
+ * LDC se déplace grâce au axes X et Y de la manette. Lorsque le bouton est 
+ * appuyé, la tuile sous le curseur et toutes celles autour qui ne sont pas des 
+ * bombes, soit jusqu'a 8 autres tuiles,sont remplacées par la même position sur
+ * le tableau contenant les bombes et des nombres équivalents au nombres de 
+ * bombes dans les cases entourant la case du  tableau. La partie se termine, 
+ * si il reste le meme nombre de tuiles que de bombes ou si la case sous le 
+ * curseur révèle une bombe. 
  *
  * @version 1.0
  * Environnement:
@@ -17,11 +25,8 @@
 #include <conio.h> // pour kbhit et getch
 #include <stdlib.h> // pour srand et rand
 #include "Lcd4Lignes.h" // pour l'utilisation du LCD
-#include "serie.h" // pour l'utilisation du port serie
 #include <stdio.h>
 #include <string.h>
-
-
 
 
 /********************** CONSTANTES *******************************************/
@@ -64,28 +69,27 @@ void afficheTabMines(void);
                            
 void main(void)
 {
-    char posY=1;
+    char posY=1; // Initialisation des variables locales
     char posX=1;
     bool lose=1;
     bool win=0;
     int nbMines=5;
     
-    initialisation();  
+    initialisation();  // Initialisation des tableaux et de l'affichage
     lcd_init();
     initTabVue();
     afficheTabVue();
     rempliMines(nbMines);
     metToucheCombien();
     
-    /*lcd_gotoXY(1,1);
+    lcd_gotoXY(1,1); // Présentation
     lcd_putMessage("Lab6");
     lcd_gotoXY(1,2);
     lcd_putMessage("Thomas Bureau-Viens");
-    
     __delay_ms(3000);
-    lcd_effaceAffichage();*/
+    lcd_effaceAffichage();
     
-    while(1)
+    while(1) // boucle principale
     {
         deplace(&posX,&posY);
         if(PORT_SW==0)
@@ -93,7 +97,7 @@ void main(void)
             while(PORT_SW==0);
             lose = demine(posX-1,posY-1);
             win = gagne(&nbMines);
-            if((lose==0)||(win==1))
+            if((lose==0)||(win==1)) // si découvre une bombe ou toutes les autres cases retirées, fin de la partie
             {
                 afficheTabMines();
                 while(PORT_SW==1);
